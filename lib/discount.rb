@@ -5,25 +5,18 @@ class Discount
 	def apply_discount(item, count, total)
 		@item = item
 		@count = count
-		offer = true
-		case item
-		when :apple
-			total = two_for_one(total, -1)
-		when :orange
-			offer = false
-		when :pear
-			total = two_for_one(total, -1)
-		when :banana
-			total = half_price_on(total, -1) # -1 means half price on all items
-		when :pineapple
-			total = half_price_on(total, 1) # half price on 1 item per cutomer
-		when :mango
-			total = buy_x_get_y_free(total, -1, 3, 1)
+		limit = discounts[@item][:discount_limit]
+		case discounts[@item][:discount_type]
+		when '2-for-1'
+			total = two_for_one(total, limit)
+		when 'half-price'
+			total = half_price_on(total, limit)
+		when 'buy-3-get-1-free'
+			total = buy_x_get_y_free(total, limit, 3, 1)
 		else
-			offer = false
+			total = pricing_rules[@item] * @count
 		end
-			(total = pricing_rules[item] * count) unless offer # apply normal price to items without offer
-			total
+		total
 	end
 
 	def pricing_rules
@@ -34,6 +27,35 @@ class Discount
 			banana: 30,
 			pineapple: 100,
 			mango: 200
+		}
+	end
+
+	def discounts
+		return {
+			apple: {
+				discount_type: '2-for-1',
+				discount_limit: -1
+			},
+			orange: {
+				discount_type: '',
+				discount_limit: 0
+			},
+			pear: {
+				discount_type: '2-for-1',
+				discount_limit: -1
+			},
+			banana: {
+				discount_type: 'half-price',
+				discount_limit: -1
+			},
+			pineapple: {
+				discount_type: 'half-price',
+				discount_limit: 1
+			},
+			mango: {
+				discount_type: 'buy-3-get-1-free',
+				discount_limit: -1
+			}
 		}
 	end
 
