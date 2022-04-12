@@ -1,3 +1,5 @@
+require_relative 'discount'
+
 class Checkout
   attr_reader :prices
   private :prices
@@ -12,26 +14,13 @@ class Checkout
 
   def total
     total = 0
+    in_my_basket = Discount.new
 
-    basket.inject(Hash.new(0)) { |items, item| items[item] += 1; items }.each do |item, count|
-      if item == :apple || item == :pear
-        if (count % 2 == 0)
-          total += prices.fetch(item) * (count / 2)
-        else
-          total += prices.fetch(item) * count
-        end
-      elsif item == :banana || item == :pineapple
-        if item == :pineapple
-          total += (prices.fetch(item) / 2)
-          total += (prices.fetch(item)) * (count - 1)
-        else
-          total += (prices.fetch(item) / 2) * count
-        end
-      else
-        total += prices.fetch(item) * count
-      end
+    basket.inject(Hash.new(0)) { |items, item| items[item] += 1; items }.each do |item, count| # loop over items in the basket
+      total += in_my_basket.apply_discount(item, count, total) # accumulate total for the basket
     end
-
+    
+    puts "Total: #{total}"
     total
   end
 
@@ -41,3 +30,9 @@ class Checkout
     @basket ||= Array.new
   end
 end
+
+# example below can be removed or changed if needed
+pricing_rules = Discount.new.pricing_rules # get prices
+checkout = Checkout.new(pricing_rules) # create instance of Checkout class with prices
+5.times { checkout.scan(:pineapple) } # scan items
+checkout.total # get basket total
