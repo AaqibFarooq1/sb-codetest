@@ -1,23 +1,6 @@
 class Discount
 
-	attr_reader :item, :count
-
-	def apply_discount(item, count, total)
-		@item = item
-		@count = count
-		limit = discounts[@item][:discount_limit]
-		case discounts[@item][:discount_type]
-		when '2-for-1'
-			total = two_for_one(total, limit)
-		when 'half-price'
-			total = half_price_on(total, limit)
-		when 'buy-3-get-1-free'
-			total = buy_x_get_y_free(total, limit, 3, 1)
-		else
-			total = pricing_rules[@item] * @count
-		end
-		total
-	end
+	attr_reader :item, :count # save having to send these in as parameters for each function
 
 	def pricing_rules
 		return {
@@ -30,15 +13,15 @@ class Discount
 		}
 	end
 
-	def discounts
+	def discounts # items and their offers can be dynamically modified here
 		return {
 			apple: {
 				discount_type: '2-for-1',
-				discount_limit: -1
+				discount_limit: -1 # -1 means no limit
 			},
 			orange: {
-				discount_type: '',
-				discount_limit: 0
+				discount_type: '', # no offer
+				discount_limit: 0 # no offer
 			},
 			pear: {
 				discount_type: '2-for-1',
@@ -50,13 +33,30 @@ class Discount
 			},
 			pineapple: {
 				discount_type: 'half-price',
-				discount_limit: 1
+				discount_limit: 1 # 1 means offer is restricted to 1 item
 			},
 			mango: {
 				discount_type: 'buy-3-get-1-free',
 				discount_limit: -1
 			}
 		}
+	end
+
+	def apply_discount(item, count, total) # types of offers can be dynamically added here
+		@item = item
+		@count = count
+		limit = discounts[@item][:discount_limit]
+		case discounts[@item][:discount_type] # map offers to functions
+		when '2-for-1'
+			total = two_for_one(total, limit)
+		when 'half-price'
+			total = half_price_on(total, limit)
+		when 'buy-3-get-1-free'
+			total = buy_x_get_y_free(total, limit, 3, 1)
+		else
+			total = pricing_rules[@item] * @count # apply normal price if no offer is matched
+		end
+		total
 	end
 
 	def two_for_one(total, limit)
@@ -88,4 +88,5 @@ class Discount
 		total += pricing_rules[@item] * remainder # add price of items outside of this offer
 		total
 	end
+
 end
